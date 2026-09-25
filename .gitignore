@@ -29,4 +29,5 @@ htmlcov/
 
 # Vercel build output (figures are copied from docs/images at deploy time)
 site/images/
+site/vendor/
 .vercel/

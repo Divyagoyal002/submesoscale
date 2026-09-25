@@ -11,6 +11,10 @@ analysis**.
 
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
+**▶ Live demo: https://submesoscale.vercel.app**. The trained network runs *in your browser*. You can scrub
+through days, compare the input, the AI output and the truth, and try the experiments (extra satellite noise,
+hiding the temperature input).
+
 <p align="center"><img src="docs/images/osse_snapshot.png" width="900" alt="L4 input, super-resolved and true ADT with current vectors (top) and Rossby number (bottom)"></p>
 
 ## What is new here compared with the reference study
@@ -105,11 +109,31 @@ Expect smaller gains on real data.
 The spectrum also shows a known limitation: the network adds a little **excess energy below about 12 km**,
 close to the grid scale. That is the kind of artefact the spectral check (FR-7) is there to catch.
 
+## Web app (`site/`)
+
+The site at https://submesoscale.vercel.app runs the trained CNN with
+[onnxruntime-web](https://onnxruntime.ai/docs/get-started/with-javascript/web.html).
+`site/assets/physics.js` is a JavaScript copy of `physics.py` and of the tiling in `inference.py`. The
+app compares its live output with the Python reconstruction (they agree to within 0.01 mm), and the
+tests check that the JavaScript physics matches the Python physics.
+
+```bash
+pip install -e ".[web]"
+submeso export-web -c configs/demo_synthetic.yaml            # synthetic test month (truth known)
+submeso export-web -c configs/wmed.yaml --source real        # real satellite data, after `reconstruct`
+sh scripts/build_site.sh && python -m http.server -d site    # preview on http://localhost:8000
+```
+
+`export-web` writes `site/model.onnx` and `site/data/` (about 8 MB for 31 days). Commit both and push:
+Vercel runs `scripts/build_site.sh`, which fetches the pinned onnxruntime-web files and checks their
+SHA-256 checksums, and then redeploys. The COOP/COEP headers in `vercel.json` make the page
+cross-origin isolated, so inference can use multi-threaded WASM (about 0.5 s per map instead of 1.7 s).
+
 ## Development
 
 ```bash
 pip install -e ".[dev]" && pre-commit install
-pytest                # 32 tests, including an end-to-end smoke test (~15 s)
+pytest                # 33 tests, including an end-to-end smoke test and a JS-vs-Python physics check
 ruff check . && ruff format --check .
 ```
 

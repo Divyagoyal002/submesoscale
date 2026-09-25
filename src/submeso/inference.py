@@ -85,7 +85,8 @@ def reconstruct(
     """Super-resolve every snapshot of ``inputs`` (adt_lr, sst_in, mask).
 
     Returns a dataset with ADT, geostrophic currents and Rossby number for both the
-    super-resolved (``*_sr``) and the input L4 (``*_lr``) fields.
+    super-resolved (``*_sr``) and the input L4 (``*_lr``) fields, plus the SST input
+    (kept so the web app can re-run the model live).
     """
     device = torch.device(device)
     model = model.to(device).eval()
@@ -112,6 +113,11 @@ def reconstruct(
                     ("time", "lat", "lon"),
                     adt_lr.astype(np.float32),
                     {"units": "m", "long_name": "input L4 ADT"},
+                ),
+                "sst_in": (
+                    ("time", "lat", "lon"),
+                    sst.astype(np.float32),
+                    {"units": "degC", "long_name": "input SST"},
                 ),
             },
             coords={"time": inputs.time.values, "lat": lat, "lon": lon},

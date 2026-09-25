@@ -57,3 +57,15 @@ def test_full_pipeline_runs(tiny_cfg):
 
     outs = pipeline.visualize(tiny_cfg)
     assert all(Path(o).exists() for o in outs)
+
+    # web app export: ONNX model (checked against PyTorch inside) + quantised days
+    from submeso.web_export import export_web
+
+    site = tiny_cfg.run_dir / "site"
+    manifest = json.loads(export_web(tiny_cfg, source="test", out=site, max_days=3).read_text())
+    assert (site / "model.onnx").exists() and manifest["has_truth"]
+    ny, nx = manifest["grid"]["ny"], manifest["grid"]["nx"]
+    day0 = (site / "data" / "day_000.bin").read_bytes()
+    assert len(day0) == 2 * ny * nx * len(manifest["fields"])
+    real = json.loads(export_web(tiny_cfg, source="real", out=site, max_days=2).read_text())
+    assert not real["has_truth"] and len(real["dates"]) == 2

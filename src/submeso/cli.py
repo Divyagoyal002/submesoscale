@@ -11,6 +11,13 @@ from submeso import pipeline
 from submeso.config import load_config
 from submeso.training import train
 
+
+def _export_web(cfg, args):
+    from submeso.web_export import export_web  # needs onnx + onnxruntime (``.[web]`` extra)
+
+    return export_web(cfg, source=args.source, out=args.out, max_days=args.max_days, ckpt=args.ckpt)
+
+
 STAGES = {
     "download": pipeline.download,
     "prepare": pipeline.prepare,
@@ -21,6 +28,7 @@ STAGES = {
     "validate": pipeline.validate,
     "visualize": pipeline.visualize,
     "all": pipeline.run_all,
+    "export-web": _export_web,
 }
 
 HELP = {
@@ -33,6 +41,7 @@ HELP = {
     "validate": "drifter + spectral validation of the reconstruction",
     "visualize": "maps and animation of reconstructed currents",
     "all": "run every stage in order",
+    "export-web": "export the model (ONNX) and fields for the web app in site/",
 }
 
 
@@ -45,7 +54,12 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("-c", "--config", required=True, help="experiment YAML")
         p.add_argument("-o", "--override", action="append", default=[], metavar="KEY=VALUE",
                        help="override a config value, e.g. -o train.epochs=5")  # fmt: skip
-        if name in ("evaluate", "reconstruct"):
+        if name == "export-web":
+            p.add_argument("--source", choices=["test", "real"], default="test",
+                           help="'test': OSSE test period (truth known); 'real': reconstruction.nc")  # fmt: skip
+            p.add_argument("--out", default="site", help="web app directory")
+            p.add_argument("--max-days", type=int, default=45, help="number of days to export")
+        if name in ("evaluate", "reconstruct", "export-web"):
             p.add_argument(
                 "--ckpt", default=None, help="checkpoint (default: <output_dir>/best.pt)"
             )
@@ -58,7 +72,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     cfg = load_config(args.config, args.override)
     fn = STAGES[args.stage]
-    result = fn(cfg, args.ckpt) if getattr(args, "ckpt", None) else fn(cfg)
+    if args.stage == "export-web":
+        result = fn(cfg, args)
+    else:
+        result = fn(cfg, args.ckpt) if getattr(args, "ckpt", None) else fn(cfg)
     if isinstance(result, dict):
         print(json.dumps(result, indent=2, default=float))
     return 0
