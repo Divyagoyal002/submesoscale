@@ -1,0 +1,58 @@
+# Secondary experiment: Black Sea (a different semi-enclosed sea from the reference study).
+# NOTE: the Global Drifter Program has almost no Black Sea data after 2010 (2 drifters in
+# 2009-2010), so in-situ validation (FR-6) is weak here; rely on the OSSE test metrics and
+# wavenumber spectra, or supply drifters from another source as data/blacksea/drifters.csv
+# (columns: id,time,lat,lon,u,v).
+experiment: blacksea_sr
+seed: 42
+output_dir: runs/blacksea_sr
+
+region:
+  name: Black Sea
+  lon_min: 27.4
+  lon_max: 41.9
+  lat_min: 40.9
+  lat_max: 46.8
+
+period:
+  train: [2013-01-01, 2019-12-31]
+  val: [2020-01-01, 2020-12-31]
+  test: [2021-01-01, 2021-12-31]
+  reconstruct: [2022-01-01, 2024-12-31]
+
+data:
+  root: data/blacksea
+  source: copernicus
+  hr_adt:   # BLKSEA_MULTIYEAR_PHY_007_004, 1/40 deg reanalysis
+    dataset_id: cmems_mod_blk_phy-ssh_my_2.5km_P1D-m
+    variable: zos
+  hr_sst:
+    dataset_id: cmems_mod_blk_phy-temp_my_2.5km_P1D-m
+    variable: thetao
+    depth: 2.0
+  adt_l4:   # SEALEVEL_EUR_PHY_L4_MY_008_068 covers the Black Sea
+    dataset_id: cmems_obs-sl_eur_phy-ssh_my_allsat-l4-duacs-0.0625deg_P1D
+    variable: adt
+  sst_l4:   # SST_BS_SST_L4_REP_OBSERVATIONS_010_022, 0.05 deg
+    dataset_id: cmems_SST_BS_SST_L4_REP_OBSERVATIONS_010_022
+    variable: analysed_sst
+
+osse:
+  target_resolution_deg: 0.025   # native model grid (~2.5 km)
+  lr_resolution_deg: 0.0625
+  adt_smoothing_km: 20.0
+  adt_noise_m: 0.01
+  sst_smoothing_km: 4.0
+  sst_noise_k: 0.05
+
+model:
+  name: resnet
+  channels: 64
+  n_blocks: 12
+
+train:
+  patch_size: 64
+  batch_size: 32
+  epochs: 80
+  patches_per_epoch: 8192
+  num_workers: 4

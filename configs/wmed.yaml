@@ -1,0 +1,76 @@
+# Primary experiment: Western Mediterranean (Alboran Sea + Balearic/Algerian basins).
+# Small Rossby radius (~10-15 km), energetic Alboran gyres and Algerian eddies, and
+# dense drifter coverage 2016-2024 (GDP: ~300 drifters in the box). The reconstruction
+# period overlaps the SWOT mission (2023+), unlike the 2008-2019 reference study.
+# All dataset IDs verified against the Copernicus Marine catalogue (copernicusmarine 2.4).
+experiment: wmed_sr
+seed: 42
+output_dir: runs/wmed_sr
+
+region:
+  name: Western Mediterranean (Alboran-Balearic)
+  lon_min: -5.5
+  lon_max: 9.0
+  lat_min: 35.0
+  lat_max: 42.5
+
+period:
+  train: [2013-01-01, 2019-12-31]
+  val: [2020-01-01, 2020-12-31]
+  test: [2021-01-01, 2021-12-31]
+  reconstruct: [2022-01-01, 2024-12-31]
+
+data:
+  root: data/wmed
+  source: copernicus
+  hr_adt:   # MEDSEA_MULTIYEAR_PHY_006_004, 1/24 deg reanalysis
+    dataset_id: cmems_mod_med_phy-ssh_my_4.2km_P1D-m
+    variable: zos
+  hr_sst:
+    dataset_id: cmems_mod_med_phy-temp_my_4.2km_P1D-m
+    variable: thetao
+    depth: 2.0
+  adt_l4:   # SEALEVEL_EUR_PHY_L4_MY_008_068, DUACS all-satellite, 1/16 deg
+    dataset_id: cmems_obs-sl_eur_phy-ssh_my_allsat-l4-duacs-0.0625deg_P1D
+    variable: adt
+  sst_l4:   # SST_MED_SST_L4_REP_OBSERVATIONS_010_021, 0.05 deg
+    dataset_id: cmems_SST_MED_SST_L4_REP_OBSERVATIONS_010_021
+    variable: analysed_sst
+  drifter_erddap_url: https://erddap.aoml.noaa.gov/gdp/erddap/tabledap/drifter_6hour_qc
+
+osse:
+  target_resolution_deg: 0.041666667   # 1/24 deg, native model grid (~3.5 km)
+  lr_resolution_deg: 0.0625
+  adt_smoothing_km: 18.0
+  adt_noise_m: 0.01
+  sst_smoothing_km: 4.0
+  sst_noise_k: 0.05
+
+model:
+  name: resnet
+  channels: 64
+  n_blocks: 12
+  dilated: true
+  res_scale: 0.1
+
+loss:
+  w_adt: 1.0
+  w_geo: 1.0
+  w_vort: 0.2
+  w_spec: 0.05
+  velocity_scale: 0.1
+
+train:
+  patch_size: 64
+  batch_size: 32
+  epochs: 80
+  patches_per_epoch: 8192
+  val_patches: 1024
+  lr: 2.0e-4
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
+  min_ocean_fraction: 0.7
+  early_stopping_patience: 12
+  num_workers: 4
+  amp: true
+  device: auto

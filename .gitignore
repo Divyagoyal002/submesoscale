@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Data and experiment outputs (regenerate with the CLI; never commit large data)
+/data/
+/runs/
+*.nc
+*.pt
+*.mp4
+*.gif
+
+# Credentials / local
+.env
+.copernicusmarine/
+.DS_Store
+.vscode/
+.idea/

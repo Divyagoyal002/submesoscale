@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Submesoscale Ocean Dynamics Modeling: physics-informed CNN super-resolution of surface currents"
+authors:
+  - family-names: Kochhar
+    given-names: Jayveer
+version: 0.1.0
+date-released: 2026-09-25
+license: MIT
+references:
+  - type: article
+    title: "Estimating ocean currents from the joint reconstruction of absolute dynamic topography and sea surface temperature through deep learning algorithms"
+    authors:
+      - family-names: Ciani
+        given-names: Daniele
+      - family-names: Fanelli
+        given-names: Claudia
+      - family-names: Buongiorno Nardelli
+        given-names: Bruno
+    journal: "Ocean Science"
+    volume: 21
+    start: 199
+    end: 216
+    year: 2025
+    doi: 10.5194/os-21-199-2025

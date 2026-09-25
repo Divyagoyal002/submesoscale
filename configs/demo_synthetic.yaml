@@ -1,0 +1,55 @@
+# Credential-free end-to-end demo on a synthetic SQG-like nature run
+# (semi-enclosed basin, SST coupled to SSH by surface-QG physics, simulated drifters).
+# Runs in ~5 min on a laptop GPU, ~15 min on CPU:  submeso all -c configs/demo_synthetic.yaml
+experiment: demo_synthetic
+seed: 7
+output_dir: runs/demo_synthetic
+
+region:
+  name: Synthetic basin
+  lon_min: 3.0
+  lon_max: 13.0
+  lat_min: 37.0
+  lat_max: 43.0
+
+period:
+  train: [2020-01-01, 2020-06-30]
+  val: [2020-07-01, 2020-07-31]
+  test: [2020-08-01, 2020-08-31]
+  reconstruct: [2020-09-01, 2020-10-15]
+
+data:
+  root: data/demo_synthetic
+  source: synthetic
+  adt_l4: {variable: adt}
+  sst_l4: {variable: analysed_sst}
+  synthetic:
+    ssh_rms_m: 0.04
+    spectral_slope: -3.6667
+    dissipation_km: 25.0
+    sst_sqg_coupling: 1.0
+    sst_noise_k: 0.05
+    decorrelation_days: 12.0
+    basin: true
+
+osse:
+  target_resolution_deg: 0.041666667
+  lr_resolution_deg: 0.125
+  adt_smoothing_km: 18.0
+  adt_noise_m: 0.005
+  sst_smoothing_km: 4.0
+  sst_noise_k: 0.05
+
+model:
+  name: resnet
+  channels: 48
+  n_blocks: 8
+
+train:
+  patch_size: 64
+  batch_size: 32
+  epochs: 25
+  patches_per_epoch: 2048
+  val_patches: 512
+  early_stopping_patience: 8
+  num_workers: 2
