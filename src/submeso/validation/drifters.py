@@ -77,14 +77,24 @@ def average_drifters(df: pd.DataFrame, window_hours: int = 24, min_obs: int = 3)
     return out[out["n"] >= min_obs].reset_index(drop=True)
 
 
+def _days(t) -> np.ndarray:
+    """Datetimes -> float days since 1970, independent of the datetime64 unit (ns/us/s)."""
+    return (np.asarray(t).astype("datetime64[s]") - np.datetime64(0, "s")) / np.timedelta64(1, "D")
+
+
 def sample_field(ds: xr.Dataset, var: str, obs: pd.DataFrame) -> np.ndarray:
-    """Linearly interpolate ``ds[var]`` (time, lat, lon) at drifter positions."""
+    """Linearly interpolate ``ds[var]`` (time, lat, lon) at drifter positions.
+
+    Time is interpolated on a numeric axis: mixing datetime64 units (pandas 3 uses
+    microseconds by default) otherwise makes xarray return NaN silently.
+    """
+    da = ds[var].assign_coords(time=_days(ds.time.values))
     pts = {
-        "time": xr.DataArray(obs["time"].values, dims="obs"),
+        "time": xr.DataArray(_days(obs["time"].values), dims="obs"),
         "lat": xr.DataArray(obs["lat"].values, dims="obs"),
         "lon": xr.DataArray(obs["lon"].values, dims="obs"),
     }
-    return ds[var].interp(pts, method="linear").values
+    return da.interp(pts, method="linear").values
 
 
 def vector_correlation(u1, v1, u2, v2) -> tuple[float, float]:
