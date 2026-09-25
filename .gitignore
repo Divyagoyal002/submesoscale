@@ -26,3 +26,7 @@ htmlcov/
 .DS_Store
 .vscode/
 .idea/
+
+# Vercel build output (figures are copied from docs/images at deploy time)
+site/images/
+.vercel/
